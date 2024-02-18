@@ -1,8 +1,8 @@
-import "./globals.css";
+
 
 export const metadata = {
-  title: "FeedMe",
-  description: "A Web application storing your Yelp locations in one",
+  title: "FeedMe | Login",
+  description: "Sign up for FeedMe to create a personalized profile for your Yelp interests.",
 };
 
 export default function RootLayout({

@@ -37,4 +37,3 @@ export interface Business {
     transactions: String[];
     url: String;
 }
-
