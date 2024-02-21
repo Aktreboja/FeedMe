@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react";
-import BusinessCard from "@/components/BusinessCard";
+import BusinessCard from "@/Components/BusinessCard";
 import { Business } from "../../business";
 
 export default function Home() {
