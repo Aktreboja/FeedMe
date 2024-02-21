@@ -8,9 +8,9 @@ import bcrypt
 app = FastAPI(docs_url="/api/docs", openapi_url="/api/openapi.json")
 
 
-# @app.get("/api/healthchecker")
-# def healthchecker():
-#     return {"status": "success", "message": "Integrate FastAPI Framework with Next.js"}
+@app.get("/api/healthchecker")
+def healthchecker():
+    return {"status": "success", "message": "API is up and running"}
 
 
 # User Model for login / signup
