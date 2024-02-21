@@ -9,6 +9,7 @@ interface TodoItemProps {
   };
 }
 
+// Added comment
 const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
   const [loading, setLoading] = useState(false);
   const updateTodo = useStore((state) => state.updateTodo);
