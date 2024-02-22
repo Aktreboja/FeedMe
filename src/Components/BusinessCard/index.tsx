@@ -26,10 +26,10 @@ const BusinessCard = ({business}: {business: Business}) => {
     
 
     return (
-    <div className="border border-gray-500 cursor-pointer flex my-2 h-fit hover:border-black duration-100 hover:shadow-md ">
-        <div className=" w-28 h-auto relative">
+    <div className="border shadow-md cursor-pointer flex my-3 rounded-r-md h-36  hover:border-black duration-100 hover:shadow-md ">
+        <div className=" w-36 h-auto relative">
           {/* Company Image */}
-          <Image src = {image_url} fill objectFit="cover" alt = {`${name} Company`}/>
+          <Image src = {image_url} fill= {true} className="object-cover h-full" alt = {`${name} Company`}/>
         </div>
         <div className="px-3">
           <h1 className="font-bold text-xl">{name}</h1>

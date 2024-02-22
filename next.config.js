@@ -11,6 +11,16 @@ const nextConfig = {
       },
     ];
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: "**.fl.yelpcdn.com",
+        port: "",
+        pathname: "/bphoto/**"
+    }
+    ]
+  }
 };
 
 module.exports = nextConfig;
