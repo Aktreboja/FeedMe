@@ -1,8 +1,9 @@
-from api.database import get_mongo_client
+from api.utils.database import get_mongo_client, find_user, get_user_collection
+from api.utils.auth import hash_password, verify_password
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 import bcrypt
-
+from api.utils.database import UserLogin
 
 router = APIRouter()
 
@@ -15,23 +16,19 @@ class User(BaseModel):
     password: str
 
 
-class UserLogin(BaseModel):
-    email: str
-    password: str
+
 
 # Login Route
 @router.post('/api/login', status_code=status.HTTP_200_OK)
 def login(user: UserLogin):
     try:
-        client = get_mongo_client()
-        db = client['FeedMe']
-        collection = db['Users']
-        user_col = collection.find_one({"email": user.email})
-        if user_col is None:
+        registered_user = find_user(user)
+        if registered_user is None:
             raise HTTPException(409, 'User does not exist')
         else:
-            verify_pw = bcrypt.checkpw(user.password.encode('utf-8'), user_col['password'])
-            if verify_pw:
+            verified = verify_password(user.password.encode('utf-8', registered_user['password']))
+            if verified:
+                # todo: Add JWT token implementation here
                 return {'Message': 'User exists and logged in'}
             else:
                 raise HTTPException(409, 'Incorrect email and/or password')
@@ -53,10 +50,7 @@ def signup(user: User):
             "name": user.name,
             "password": hash
         }
-        client = get_mongo_client()
-        db = client["FeedMe"]
-        collection = db['Users']
-
+        collection = get_user_collection()
         # Check to see if the account is unique
         duplicate = collection.find_one({"email": new_user['email']})
         if duplicate is None:

@@ -1,4 +1,4 @@
-import { SetStateAction } from "react";
+import { SetStateAction, SyntheticEvent } from "react";
 
 export interface SearchObject {
     term: string;
@@ -8,5 +8,5 @@ export interface SearchObject {
 export interface NavbarHandlers {
     setTerm: React.Dispatch<SetStateAction<string>>;
     setLocation: React.Dispatch<SetStateAction<string>>; 
-    searchHandler: () => Promise<void>;
+    searchHandler: (event: SyntheticEvent) => Promise<void>;
 }
