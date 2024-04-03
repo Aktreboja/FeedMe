@@ -4,6 +4,10 @@ import {Montserrat} from 'next/font/google'
 import Link from "next/link"
 import { useState } from "react"
 
+import { useAppDispatch, useAppSelector } from "@/app/features/hooks"
+import { setSearchLocation, setSearchterm } from "@/app/features/businessReducer"
+import { RootState } from "@/store"
+import SearchForm from "../SearchForm"
 
 const montserrat = Montserrat({
     subsets: ['latin'],
@@ -11,18 +15,20 @@ const montserrat = Montserrat({
     style: ['italic']
 })
 
-const Navbar = ({ searchQuery, handlers }: { searchQuery: SearchObject, handlers:  NavbarHandlers}) => {
+const Navbar = ({ handler }: { handler:  NavbarHandlers}) => {
 
-    const {term, location} = searchQuery
-    const {setTerm, setLocation, searchHandler} = handlers
-
-    const [isOpen, setIsOpen] = useState(false)
+    // State selectors from Redux Store
+    const searchTerm = useAppSelector((state: RootState) => state.business.searchTerm)
+    const searchLocation = useAppSelector((state: RootState) => state.business.searchLocation)
+    // Redux Dispatcher initialization
+    const dispatch = useAppDispatch()
+    const { searchHandler } = handler
 
     return (
         <nav className="fixed top-0 w-full border flex justify-between items-center h-20 py-3 bg-white z-50">
             <div className="flex  justify-center items-end">
-                <h1 className={`font-bold text-4xl pl-3 ${montserrat.className}`}>FeedMe</h1>
-                <div className="flex ml-5 ">
+                <h1 className={`font-bold text-2xl md:text-4xl pl-3 ${montserrat.className}`}>FeedMe</h1>
+                <div className="ml-5 hidden md:flex">
                     <p> Powered by </p>
                     <Link 
                         href = "https://www.yelp.com" 
@@ -37,14 +43,12 @@ const Navbar = ({ searchQuery, handlers }: { searchQuery: SearchObject, handlers
                     </Link>
                 </div>
             </div>
-            <form className=" shadow-lg rounded-md hidden lg:block" onSubmit={(e) => searchHandler(e)}>
-                <input placeholder="Restaurant" className=" py-2 px-3 outline-none " value = {term} onChange = {(e) => setTerm(e.currentTarget.value)}/>
-                <span className="w-1 bg-black border"></span>
-                <input placeholder ="Location" className=" py-2 px-3 outline-none" value = {location} onChange = {(e) => setLocation(e.currentTarget.value)}/>
-                <button  disabled = {term.trim() === '' || location.trim() === '' ? true : false } className="bg-red-800 hover:bg-red-700 duration-75 h-full py-2 px-3 rounded-r-md text-white font-semibold"  type="submit">Search</button>
-            </form>
-            <div className="mr-3 border h-fit">
-                <p className="font-semibold">Profile</p>
+            <div className="hidden lg:block">
+                <SearchForm searchHandler={searchHandler}/>
+            </div>
+            
+            <div className="mr-3  h-fit">
+                <p className="font-semibold"></p>
                 <span>
                     
                 </span>

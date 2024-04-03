@@ -1,80 +1,130 @@
 "use client"
-import { SyntheticEvent, useCallback, useState } from "react";
+import { SyntheticEvent, useCallback, useState, useEffect} from "react";
 import BusinessCard from "@/Components/BusinessCard";
 import { Business } from "../../../business";
 import Navbar from "@/Components/Navbar";
-import { searchLocations } from "@/utils/Business";
 import GoogleMaps from "@/Components/GoogleMap";
-import { MapCameraProps, MapCameraChangedEvent } from "@vis.gl/react-google-maps";
+import { MapCameraProps, MapCameraChangedEvent, useMap } from "@vis.gl/react-google-maps";
+import { useAppDispatch, useAppSelector } from "../features/hooks"
+import { getBusinesses } from "../features/businessReducer";
+import { fetchBusinesses, getTerm, getLocation } from "../features/businessReducer";
+import { getBusinessCoords, getMapCameraProps, setBusinessCoords, setMapCamera } from '../features/mapReducer'
+import SearchForm from "@/Components/SearchForm";
 
-
-export default function Home() {
-  const [term, setTerm] = useState('')
-  const [location, setLocation] = useState('')
+export default function Dashboard() {
+  // Redux Dispatcher initialization
+  const dispatch = useAppDispatch()
   
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [region, setRegion] = useState()
+  // State selectors from businessReducer
+  const searchTerm = useAppSelector(getTerm)
+  const searchLocation = useAppSelector(getLocation)
+  const businesses = useAppSelector(getBusinesses)
 
-  const [businessCoords, setBusinessCoords] = useState<google.maps.LatLngLiteral[]>([])
+  // State selectors from mapReducer
+  const mapCameraProps = useAppSelector(getMapCameraProps)
+  const businessCoords = useAppSelector(getBusinessCoords)
 
+  // State to navigate to the user's location, as well as the general region of the search results
+
+  const map = useMap()
+
+  // useEffect to load the user's location, will ask for permission
+  useEffect(() => {
+    const retrieveCurrentLocation = () => {
+      if (!navigator.geolocation) console.error("Browser is not compatible")
+      else {
+          navigator.geolocation.getCurrentPosition((success) => {
   
-  const INITIAL_CAMERA = {
-    center: {lat: 37.325095, lng: -121.942508},
-    zoom: 12
+              const coords : MapCameraProps = {
+                  center: {
+                      lat: success.coords.latitude,
+                      lng: success.coords.longitude
+                  },
+                  zoom: 12
+              }
+              dispatch(setMapCamera(coords))
+          },
+          (error) => {
+              console.error("Error here: ", error.message)
+          })
+      }
   }
+  retrieveCurrentLocation()
+  if (!map) return
+  }, [map, dispatch])
 
-  const [cameraProps, setCameraProps] = useState<MapCameraProps>(INITIAL_CAMERA)
 
-
-  // Navbar Search Handler
+  // Navbar Search Handler for Yelp businesses
   const searchHandler = async (event: SyntheticEvent) => {
     event.preventDefault();
-    const searchResults = await searchLocations(term, location);
-    const businesses : Business[] = searchResults.businesses
-    console.log(businesses)
-    setBusinesses(businesses)
-    setRegion(searchResults.region)
+    try {
+      const result = await dispatch(fetchBusinesses({
+        term: searchTerm,
+        location: searchLocation
+      })).unwrap()
 
-    const businessesCoords = []
-    for (let business = 0; business < businesses.length; business++) {
-      const {latitude, longitude} = businesses[business].coordinates
-      businessesCoords.push({lat: latitude, lng: longitude})
+      const { region } = result
+      const NEW_CAMERA : MapCameraProps = {
+        center: {lat: region.center.latitude, lng: region.center.longitude},
+        zoom: 12
+      }
+      dispatch(setMapCamera(NEW_CAMERA))
+
+    } catch (error) {
+      console.error("Error here: ", error)
     }
-    setBusinessCoords(businessesCoords )
-    const NEW_CAMERA : MapCameraProps = {
-      center: {lat: searchResults.region.center.latitude, lng: searchResults.region.center.longitude},
-      zoom: cameraProps.zoom
-    }
-    setCameraProps(NEW_CAMERA)
   }
-
 
   const centerHandler = useCallback((ev: MapCameraChangedEvent) => {
     const newCameraProps : MapCameraProps = {
       center: ev.detail.center,
       zoom: ev.detail.zoom
     }
-    setCameraProps(newCameraProps)
-  }, [])
+    dispatch(setMapCamera(newCameraProps))
+  }, [dispatch])
 
 
+// onClick handler for when a business is clicked from the search results
+const businessClickHandler = (business: Business) => {
+  const { coordinates } = business
+  const { latitude, longitude } = coordinates
+
+  // Set the business coords and pan to the position of the business
+
+  dispatch(
+    setBusinessCoords({
+      lat: latitude,
+      lng: longitude
+    })
+  )
+
+  if (map) {
+    map.panTo({
+      lat: latitude,
+      lng: longitude
+    })
+    map.setZoom(13)
+  } 
+}
 
   return (
-    <main className="relative flex flex-col h-screen ">
-        <Navbar searchQuery={{term, location}} handlers={{ setTerm, setLocation, searchHandler }}/>
-        <div className="w-full h-20"></div>
-        <section className="flex border-black ">
-          
+      <main className="relative flex flex-col h-screen ">
+        <Navbar handler={{ searchHandler }}/>
+        <section className="w-full h-[80vh] flex flex-grow flex-col items-center overflow-y-auto mt-3">
           {/* Results for yelp destinations */}
-          <div className="w-3/5 px-2 border h-80 mt-20">
-              {
-                businesses && businesses.map((business, key) => <BusinessCard key = {key} business={business}/>)
-              }
+          <div className="mt-20 w-full  lg:hidden">
+            <SearchForm searchHandler={searchHandler}/>
           </div>
-          <div className="fixed right-0 w-2/5 h-[90%] flex-1 border-black">
-              <GoogleMaps cameraProps = {cameraProps} centerHandler = {centerHandler} markerCoords = {businessCoords}/>
+          
+          <div className="w-full lg:mt-20 lg:w-1/2 max-w-[800px] px-2 border mt-5 max h-[80vh] overflow-y-scroll">
+            {businesses.map((business, key) => (
+              <BusinessCard key={key} business={business} clickHandler={businessClickHandler} />
+            ))}
           </div>
-        </section> 
+          <div className="w-full h-1/3  min-h-[300px] md:min-h-[400px] md:max-w-[800px] p-6 mx-auto mt-auto">
+            {mapCameraProps && <GoogleMaps cameraProps={mapCameraProps as MapCameraProps} centerHandler={centerHandler} markerCoords={businessCoords} />}
+          </div>
+      </section>
     </main>
   );
 }

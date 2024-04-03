@@ -19,8 +19,8 @@ const RatingStars = ({ rating } : {rating: Number}) => {
         const isHalfFilled = roundedRating % 1 !== 0 && Math.ceil(roundedRating) === index + 1;
 
         return (
-          <span key={index} className="text-2xl ">
-            <div className='rounded mx-[1px] px-1 h-7 flex justify-center items-center'>
+          <span key={index} className="text-xl md:text-2xl ">
+            <div className='rounded  px-1 h-7 flex justify-center items-center'>
                 <span className={`${starClass} star `}>
                 {isHalfFilled ? "☆"   : "★"}
                 </span>

@@ -1,9 +1,8 @@
+"use client"
 import "./globals.css";
+import store from "@/store";
+import { Provider } from "react-redux";
 
-export const metadata = {
-  title: "FeedMe",
-  description: "A Web application storing your Yelp locations in one",
-};
 
 export default function RootLayout({
   children,
@@ -12,7 +11,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Provider store={store}>
+          {children}
+        </Provider>
+
+      </body>
     </html>
   );
 }
