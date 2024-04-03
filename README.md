@@ -216,8 +216,6 @@ _Below is an example of how you can instruct your audience on installing and set
 
 Aldrich Reboja - aktreboja@gmail.com
 
-Project Link: [https://github.com/aktreboja/NBAStatTracker](https://github.com/aktreboja/NBAStatTracker)
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
