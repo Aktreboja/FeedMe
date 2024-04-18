@@ -8,7 +8,14 @@
     "dev": "concurrently \"pnpm run next-dev\" \"pnpm run fastapi-dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier . --write",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*": [
+      "prettier --write --ignore-unknown"
+    ]
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.2.3",
@@ -29,6 +36,10 @@
     "@types/json5": "^2.2.0",
     "@types/node": "^20.12.3",
     "@types/react": "^18.2.74",
-    "@types/react-dom": "^18.2.23"
+    "@types/react-dom": "^18.2.23",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5"
   }
 }
