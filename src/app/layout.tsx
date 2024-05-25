@@ -1,8 +1,9 @@
-"use client"
-import "./globals.css";
-import store from "@/store";
-import { Provider } from "react-redux";
+'use client';
+import './globals.css';
 
+import { Provider } from 'react-redux';
+import { store } from '@/store';
+import { UserProvider } from '@auth0/nextjs-auth0/client';
 
 export default function RootLayout({
   children,
@@ -12,10 +13,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Provider store={store}>
-          {children}
-        </Provider>
-
+        <UserProvider>
+          <Provider store={store}>{children}</Provider>
+        </UserProvider>
       </body>
     </html>
   );

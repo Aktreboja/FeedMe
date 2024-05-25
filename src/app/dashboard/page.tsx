@@ -1,130 +1,239 @@
-"use client"
-import { SyntheticEvent, useCallback, useState, useEffect} from "react";
-import BusinessCard from "@/Components/BusinessCard";
-import { Business } from "../../../business";
-import Navbar from "@/Components/Navbar";
-import GoogleMaps from "@/Components/GoogleMap";
-import { MapCameraProps, MapCameraChangedEvent, useMap } from "@vis.gl/react-google-maps";
-import { useAppDispatch, useAppSelector } from "../features/hooks"
-import { getBusinesses } from "../features/businessReducer";
-import { fetchBusinesses, getTerm, getLocation } from "../features/businessReducer";
-import { getBusinessCoords, getMapCameraProps, setBusinessCoords, setMapCamera } from '../features/mapReducer'
-import SearchForm from "@/Components/SearchForm";
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  MapCameraProps,
+  MapCameraChangedEvent,
+} from '@vis.gl/react-google-maps';
+import SearchForm from '@/Components/SearchForm';
+import { useUser, withPageAuthRequired } from '@auth0/nextjs-auth0/client';
+import { useFetchUserBusinessesQuery } from '@/store/business/BusinessApiSlice';
+import { Business } from '@/business';
+import GoogleMaps from '@/Components/GoogleMap';
+import Link from 'next/link';
+import PieChart from '@/Components/BusinessCategoryPieChart';
 
-export default function Dashboard() {
-  // Redux Dispatcher initialization
-  const dispatch = useAppDispatch()
-  
-  // State selectors from businessReducer
-  const searchTerm = useAppSelector(getTerm)
-  const searchLocation = useAppSelector(getLocation)
-  const businesses = useAppSelector(getBusinesses)
+export default withPageAuthRequired(
+  function Dashboard() {
+    const { user, error, isLoading } = useUser();
 
-  // State selectors from mapReducer
-  const mapCameraProps = useAppSelector(getMapCameraProps)
-  const businessCoords = useAppSelector(getBusinessCoords)
+    const INITIAL_CAMERA = {
+      center: { lat: 37.325095, lng: -121.942508 },
+      zoom: 9,
+    };
 
-  // State to navigate to the user's location, as well as the general region of the search results
+    // @ts-ignore
+    const { data } = useFetchUserBusinessesQuery(user?.sub);
 
-  const map = useMap()
+    const [businesses, setBusinesses] = useState<Business[]>([]);
 
-  // useEffect to load the user's location, will ask for permission
-  useEffect(() => {
-    const retrieveCurrentLocation = () => {
-      if (!navigator.geolocation) console.error("Browser is not compatible")
-      else {
-          navigator.geolocation.getCurrentPosition((success) => {
-  
-              const coords : MapCameraProps = {
-                  center: {
-                      lat: success.coords.latitude,
-                      lng: success.coords.longitude
-                  },
-                  zoom: 12
-              }
-              dispatch(setMapCamera(coords))
+    const [cameraProps, setCameraProps] =
+      useState<MapCameraProps>(INITIAL_CAMERA);
+    const [markerCoordinates, setMarkerCoordinates] =
+      useState<google.maps.LatLngLiteral>();
+
+    useEffect(() => {
+      if (data) {
+        let businessArray: Business[] = [];
+        data.data.forEach((entry) => businessArray.push(entry.business));
+        setBusinesses(businessArray);
+      }
+    }, [data]);
+
+    const centerHandler = useCallback((ev: MapCameraChangedEvent) => {
+      const newCameraProps: MapCameraProps = {
+        center: ev.detail.center,
+        zoom: ev.detail.zoom,
+      };
+      setCameraProps(newCameraProps);
+    }, []);
+
+    interface Business {
+      categories: { title: string }[];
+    }
+
+    interface PieChartData {
+      label: string;
+      value: number;
+    }
+
+    const calculateBusinessPieChartData = (
+      businesses: Business[],
+    ): PieChartData[] => {
+      let dataset: { [key: string]: number } = {};
+
+      for (let i = 0; i < businesses.length; i++) {
+        const categories = businesses[i].categories;
+        for (let j = 0; j < categories.length; j++) {
+          const categoryTitle = categories[j].title;
+          if (categoryTitle in dataset) {
+            dataset[categoryTitle]++;
+          } else {
+            dataset[categoryTitle] = 1;
+          }
+        }
+      }
+
+      // Convert dataset to an array of objects with 'label' and 'value' fields and sort by value in descending order
+      return Object.entries(dataset)
+        .sort((a, b) => b[1] - a[1])
+        .map(([label, value]) => ({ label, value }));
+    };
+
+    // console.log(calculateBusinessPieChartData(businesses))
+
+    // const chartData = [{ label: 'Apples', value: 10 }, { label: 'Oranges', value: 20 }];
+
+    const labelsArray: string[] = [];
+    const dataArray: number[] = [];
+    calculateBusinessPieChartData(businesses)
+      .slice(0, 5)
+      .forEach((entry) => {
+        dataArray.push(entry.value);
+        labelsArray.push(entry.label);
+      });
+
+    const chartData = {
+      labels: labelsArray,
+      datasets: [
+        {
+          label: 'Favorited Businesses',
+          data: dataArray,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.2)',
+            'rgba(54, 162, 235, 0.2)',
+            'rgba(255, 206, 86, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(153, 102, 255, 0.2)',
+            'rgba(255, 159, 64, 0.2)',
+          ],
+          borderColor: [
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 159, 64, 1)',
+          ],
+          borderWidth: 1,
+          legend: {
+            position: 'right',
           },
-          (error) => {
-              console.error("Error here: ", error.message)
-          })
-      }
-  }
-  retrieveCurrentLocation()
-  if (!map) return
-  }, [map, dispatch])
+        },
+      ],
+    };
 
+    const chartOptions = {
+      plugins: {
+        responsive: true,
+        legend: {
+          position: 'right', // Position the legend on the right
+        },
+      },
+    };
 
-  // Navbar Search Handler for Yelp businesses
-  const searchHandler = async (event: SyntheticEvent) => {
-    event.preventDefault();
-    try {
-      const result = await dispatch(fetchBusinesses({
-        term: searchTerm,
-        location: searchLocation
-      })).unwrap()
+    // todo: Create loading animations here
+    if (isLoading) return <div>Loading...</div>;
+    else if (user)
+      return (
+        <section className="w-full overflow-y-auto mt-3 h-fit">
+          <div className="flex flex-col items-center">
+            <h1 className="text-4xl font-bold mb-5">Welcome, {user.name}</h1>
+            <div className="w-4/5  flex flex-col justify-center">
+              <h3 className="font-semibold text-2xl text-center">
+                Ready to begin? Search for a location below
+              </h3>
+              <div className="mx-auto my-4 max-lg:w-full">
+                <SearchForm />
+              </div>
+            </div>
+          </div>
 
-      const { region } = result
-      const NEW_CAMERA : MapCameraProps = {
-        center: {lat: region.center.latitude, lng: region.center.longitude},
-        zoom: 12
-      }
-      dispatch(setMapCamera(NEW_CAMERA))
+          {/* Section with all of the analytics */}
+          <div className="w-full mt-5">
+            <h2 className="text-center text-3xl font-semibold">
+              Your Recent History
+            </h2>
+            <div className=" grid max-lg:grid-cols-1 gap-3 grid-cols-2 max-lg:w-full w-4/5 max-w-[1400px] mx-auto mt-3 p-2">
+              {/* Total Searches this week */}
+              <DashboardGridBox
+                title="Saved Businesses"
+                businesses={businesses}
+                redirect="/businesses"
+              />
+              <div className="relative border px-3 py-2 w-full min-h-96 max-h-[430px] mr-1 shadow-md flex flex-col items-center">
+                <h3 className="text-2xl text-center font-semibold">
+                  Your Restaurant Categories
+                </h3>
+                <div className="flex-grow h-fit w-f flex py-1 justify-center items-center">
+                  <PieChart data={chartData} options={chartOptions} />
+                </div>
+                <div className="mt-1 h-6 w-full">
+                  <Link href="/businesses">
+                    <p className="text-right  text-gray-600 cursor-pointer hover:underline">
+                      View Businesses
+                    </p>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
 
-    } catch (error) {
-      console.error("Error here: ", error)
-    }
-  }
+          {/* Google Map */}
+          <div className="max-lg:w-full w-4/5 max-w-[1400px] h-[425px] mx-auto max-lg:mt-5 mt-12">
+            <GoogleMaps
+              cameraProps={cameraProps}
+              markerCoords={markerCoordinates}
+              centerHandler={centerHandler}
+            />
+          </div>
+        </section>
+      );
+  },
+  {
+    returnTo: '/dashboard',
+  },
+);
 
-  const centerHandler = useCallback((ev: MapCameraChangedEvent) => {
-    const newCameraProps : MapCameraProps = {
-      center: ev.detail.center,
-      zoom: ev.detail.zoom
-    }
-    dispatch(setMapCamera(newCameraProps))
-  }, [dispatch])
-
-
-// onClick handler for when a business is clicked from the search results
-const businessClickHandler = (business: Business) => {
-  const { coordinates } = business
-  const { latitude, longitude } = coordinates
-
-  // Set the business coords and pan to the position of the business
-
-  dispatch(
-    setBusinessCoords({
-      lat: latitude,
-      lng: longitude
-    })
-  )
-
-  if (map) {
-    map.panTo({
-      lat: latitude,
-      lng: longitude
-    })
-    map.setZoom(13)
-  } 
-}
-
+// Dashboard Grid Box items
+const DashboardGridBox = ({
+  title,
+  businesses,
+  redirect,
+}: {
+  title: string;
+  businesses: Business[];
+  redirect?: string;
+}) => {
   return (
-      <main className="relative flex flex-col h-screen ">
-        <Navbar handler={{ searchHandler }}/>
-        <section className="w-full h-[80vh] flex flex-grow flex-col items-center overflow-y-auto mt-3">
-          {/* Results for yelp destinations */}
-          <div className="mt-20 w-full  lg:hidden">
-            <SearchForm searchHandler={searchHandler}/>
-          </div>
-          
-          <div className="w-full lg:mt-20 lg:w-1/2 max-w-[800px] px-2 border mt-5 max h-[80vh] overflow-y-scroll">
-            {businesses.map((business, key) => (
-              <BusinessCard key={key} business={business} clickHandler={businessClickHandler} />
-            ))}
-          </div>
-          <div className="w-full h-1/3  min-h-[300px] md:min-h-[400px] md:max-w-[800px] p-6 mx-auto mt-auto">
-            {mapCameraProps && <GoogleMaps cameraProps={mapCameraProps as MapCameraProps} centerHandler={centerHandler} markerCoords={businessCoords} />}
-          </div>
-      </section>
-    </main>
+    <div className="border px-3 py-2 w-full min-h-96 max-h-[430px] mr-1 shadow-md flex flex-col ">
+      <h3 className="text-2xl text-center font-semibold">{title}</h3>
+      <div className="mt-3 rounded-sm  border-gray-300 px-1 py-2 flex-grow">
+        {businesses &&
+          businesses.map((business, key) => {
+            const { name, location } = business;
+            const { city, state } = location;
+            return (
+              <div
+                key={key}
+                className="border shadow-sm rounded-sm px-2 py-1 my-1.5 hover:shadow-md hover:duration-100 cursor-pointer"
+              >
+                <p className="font-semibold">{name}</p>
+                <p>
+                  {city}, {state}
+                </p>
+              </div>
+            );
+          })}
+      </div>
+      <div className="mt-1 h-6">
+        {redirect && (
+          <Link href="/businesses">
+            <p className="text-right text-gray-600 cursor-pointer hover:underline">
+              View More
+            </p>
+          </Link>
+        )}
+      </div>
+    </div>
   );
-}
+};
