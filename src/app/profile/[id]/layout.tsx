@@ -9,7 +9,7 @@ export default function RootLayout({
 }) {
   return (
     <APIProvider apiKey={`${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}>
-      <div className="flex flex-col">
+      <div className="flex flex-col h-screen">
         <Navbar />
         <main className="flex-grow overflow-y-auto mt-20 p-4">{children}</main>
         <Footer />

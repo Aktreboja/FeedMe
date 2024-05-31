@@ -1,10 +1,8 @@
-import { SearchObject, NavbarHandlers } from '../../../types';
 import Image from 'next/image';
 import { Montserrat } from 'next/font/google';
 import Link from 'next/link';
 import { useState } from 'react';
 
-import SearchForm from '../SearchForm';
 import { useUser } from '@auth0/nextjs-auth0/client';
 
 const montserrat = Montserrat({
@@ -23,7 +21,7 @@ const Navbar = () => {
       <div className="flex  justify-center items-end">
         <Link href="/dashboard">
           <h1
-            className={`font-bold text-2xl md:text-4xl pl-3 ${montserrat.className}`}
+            className={`font-bold text-2xl md:text-4xl pl-3 ml-5 ${montserrat.className}`}
           >
             FeedMe
           </h1>
@@ -43,18 +41,21 @@ const Navbar = () => {
           </Link>
         </div>
       </div>
-      <div className="hidden lg:flex">
-        <Link href="/businesses">
-          <p className="font-semibold mt-2 text-lg mx-2">Businesses</p>
-        </Link>
-        <Link href="/search">
-          <p className="font-semibold mt-2 text-lg mx-2">Search</p>
-        </Link>
-        {/* <SearchForm searchHandler={searchHandler} /> */}
-      </div>
+      {user && (
+        <div className="hidden lg:flex">
+          <Link href="/businesses">
+            <p className="font-semibold mt-2 text-lg mx-2">Businesses</p>
+          </Link>
+          <Link href="/search">
+            <p className="font-semibold mt-2 text-lg mx-2">Search</p>
+          </Link>
+          {/* <SearchForm searchHandler={searchHandler} /> */}
+        </div>
+      )}
+
       {user && user.picture && user.name && (
         <div
-          className="mr-3 h-fit flex items-center cursor-pointer"
+          className="mr-5 h-fit flex items-center cursor-pointer"
           onClick={() => setSettings(!settings)}
         >
           <p className="max-lg:hidden font-semibold mx-3 mt-1">
@@ -72,7 +73,7 @@ const Navbar = () => {
           {/* Toggler to be able to log off */}
           {settings && (
             <div className="border max-lg:w-full w-52 h-fit absolute right-3 top-20 bg-white rounded-sm shadow-md">
-              <Link href="/profile">
+              <Link href={`/profile/${user.nickname}`}>
                 <p className="text-center font-semibold max-lg:text-md text-lg py-2 hover:bg-gray-100 duration-100">
                   Profile
                 </p>

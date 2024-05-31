@@ -7,7 +7,7 @@ import {
 import SearchForm from '@/Components/SearchForm';
 import { useUser, withPageAuthRequired } from '@auth0/nextjs-auth0/client';
 import { useFetchUserBusinessesQuery } from '@/store/business/BusinessApiSlice';
-import { Business } from '@/business';
+import { Business, Coordinates } from '@/business';
 import GoogleMaps from '@/Components/GoogleMap';
 import Link from 'next/link';
 import PieChart from '@/Components/BusinessCategoryPieChart';
@@ -46,10 +46,6 @@ export default withPageAuthRequired(
       };
       setCameraProps(newCameraProps);
     }, []);
-
-    interface Business {
-      categories: { title: string }[];
-    }
 
     interface PieChartData {
       label: string;
@@ -131,12 +127,68 @@ export default withPageAuthRequired(
       },
     };
 
+    const selectedBusinessHandler = (coordinates: Coordinates) => {
+      const { latitude, longitude } = coordinates;
+      setCameraProps({
+        center: { lat: latitude, lng: longitude },
+        zoom: 15,
+      });
+      setMarkerCoordinates({ lat: latitude, lng: longitude });
+    };
+
+    // Dashboard Grid Box items
+    const DashboardGridBox = ({
+      title,
+      businesses,
+      redirect,
+    }: {
+      title: string;
+      businesses: Business[];
+      redirect?: string;
+    }) => {
+      return (
+        <div className="border p-4 w-full min-h-96 max-h-[430px] mr-1 shadow-md flex flex-col gap-1">
+          <h3 className="text-2xl text-center font-semibold">{title}</h3>
+          <div className="rounded-sm  border-gray-300 px-1 py-2 flex-grow">
+            {businesses &&
+              businesses.map((business, key) => {
+                const { name, location, coordinates } = business;
+                const { city, state } = location;
+                return (
+                  <div
+                    key={key}
+                    onClick={() => {
+                      selectedBusinessHandler(coordinates);
+                    }}
+                    className="border shadow-sm rounded-sm px-2 py-1 my-1 hover:shadow-md hover:duration-100 cursor-pointer"
+                  >
+                    <p className="font-semibold">{name}</p>
+                    <p>
+                      {city}, {state}
+                    </p>
+                  </div>
+                );
+              })}
+          </div>
+          <div className="h-6">
+            {redirect && (
+              <Link href="/businesses">
+                <p className="text-right text-gray-600 cursor-pointer hover:underline">
+                  View More
+                </p>
+              </Link>
+            )}
+          </div>
+        </div>
+      );
+    };
+
     // todo: Create loading animations here
     if (isLoading) return <div>Loading...</div>;
     else if (user)
       return (
         <section className="w-full overflow-y-auto mt-3 h-fit">
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center w-4/5 border shadow-md mx-auto p-10">
             <h1 className="text-4xl font-bold mb-5">Welcome, {user.name}</h1>
             <div className="w-4/5  flex flex-col justify-center">
               <h3 className="font-semibold text-2xl text-center">
@@ -150,13 +202,10 @@ export default withPageAuthRequired(
 
           {/* Section with all of the analytics */}
           <div className="w-full mt-5">
-            <h2 className="text-center text-3xl font-semibold">
-              Your Recent History
-            </h2>
-            <div className=" grid max-lg:grid-cols-1 gap-3 grid-cols-2 max-lg:w-full w-4/5 max-w-[1400px] mx-auto mt-3 p-2">
+            <div className=" grid max-lg:grid-cols-1 gap-3 grid-cols-2 max-lg:w-full w-4/5 max-w-[1400px] mx-auto mt-1 p-2">
               {/* Total Searches this week */}
               <DashboardGridBox
-                title="Saved Businesses"
+                title="Recently Saved Businesses"
                 businesses={businesses}
                 redirect="/businesses"
               />
@@ -179,7 +228,7 @@ export default withPageAuthRequired(
           </div>
 
           {/* Google Map */}
-          <div className="max-lg:w-full w-4/5 max-w-[1400px] h-[425px] mx-auto max-lg:mt-5 mt-12">
+          <div className="max-lg:w-full w-4/5 max-w-[1400px] h-[425px] mx-auto mt-5 ">
             <GoogleMaps
               cameraProps={cameraProps}
               markerCoords={markerCoordinates}
@@ -193,47 +242,3 @@ export default withPageAuthRequired(
     returnTo: '/dashboard',
   },
 );
-
-// Dashboard Grid Box items
-const DashboardGridBox = ({
-  title,
-  businesses,
-  redirect,
-}: {
-  title: string;
-  businesses: Business[];
-  redirect?: string;
-}) => {
-  return (
-    <div className="border px-3 py-2 w-full min-h-96 max-h-[430px] mr-1 shadow-md flex flex-col ">
-      <h3 className="text-2xl text-center font-semibold">{title}</h3>
-      <div className="mt-3 rounded-sm  border-gray-300 px-1 py-2 flex-grow">
-        {businesses &&
-          businesses.map((business, key) => {
-            const { name, location } = business;
-            const { city, state } = location;
-            return (
-              <div
-                key={key}
-                className="border shadow-sm rounded-sm px-2 py-1 my-1.5 hover:shadow-md hover:duration-100 cursor-pointer"
-              >
-                <p className="font-semibold">{name}</p>
-                <p>
-                  {city}, {state}
-                </p>
-              </div>
-            );
-          })}
-      </div>
-      <div className="mt-1 h-6">
-        {redirect && (
-          <Link href="/businesses">
-            <p className="text-right text-gray-600 cursor-pointer hover:underline">
-              View More
-            </p>
-          </Link>
-        )}
-      </div>
-    </div>
-  );
-};

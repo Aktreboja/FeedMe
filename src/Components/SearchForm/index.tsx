@@ -18,18 +18,18 @@ const SearchForm = () => {
 
   return (
     <form
-      className=" mx-auto rounded-md flex flex-col  lg:flex-row lg:items-center"
+      className=" mx-auto rounded-md flex flex-col gap-1 lg:flex-row lg:items-center"
       onSubmit={(e) => searchHandler(e)}
     >
       <input
         placeholder="Restaurant"
-        className=" py-2  px-3 outline-none h-9 text-sm border my-2 lg:mx-1"
+        className=" py-2  px-3 outline-none h-9 text-sm border border-gray-400 rounded-sm my-2 "
         value={term}
         onChange={(e) => setTerm(e.currentTarget.value)}
       />
       <input
         placeholder="Location"
-        className=" py-2 px-3 outline-none h-9 text-sm border my-2 lg:mx-1"
+        className=" py-2 px-3 outline-none h-9 text-sm border border-gray-400 rounded-sm my-2 lg:mx-1"
         value={location}
         onChange={(e) => setLocation(e.currentTarget.value)}
       />
