@@ -94,7 +94,7 @@ export default withPageAuthRequired(
         </div>
 
         {searchResults.length > 0 && (
-          <div className="max-md:w-full min-w-[500px] h-[93.3%] fixed overflow-y-scroll z-30 top-20 ">
+          <div className="max-md:w-full min-w-[500px] h-[93.3%] fixed overflow-y-scroll z-30 top-20 bg-white">
             {searchResults.map((result, key) => (
               <SearchResult
                 key={key}

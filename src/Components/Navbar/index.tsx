@@ -17,7 +17,7 @@ const Navbar = () => {
   const [settings, setSettings] = useState(false);
 
   return (
-    <nav className="fixed top-0 w-full border flex justify-between items-center h-20 py-3 bg-white z-50">
+    <nav className="fixed top-0 w-full border border-b-2 flex justify-between items-center h-20 py-3 bg-white z-50">
       <div className="flex  justify-center items-end">
         <Link href="/dashboard">
           <h1
@@ -46,9 +46,9 @@ const Navbar = () => {
           <Link href="/businesses">
             <p className="font-semibold mt-2 text-lg mx-2">Businesses</p>
           </Link>
-          <Link href="/search">
+          {/* <Link href="/search">
             <p className="font-semibold mt-2 text-lg mx-2">Search</p>
-          </Link>
+          </Link> */}
           {/* <SearchForm searchHandler={searchHandler} /> */}
         </div>
       )}
@@ -73,16 +73,16 @@ const Navbar = () => {
           {/* Toggler to be able to log off */}
           {settings && (
             <div className="border max-lg:w-full w-52 h-fit absolute right-3 top-20 bg-white rounded-sm shadow-md">
-              <Link href={`/profile/${user.nickname}`}>
+              {/* <Link href={`/profile/${user.nickname}`}>
                 <p className="text-center font-semibold max-lg:text-md text-lg py-2 hover:bg-gray-100 duration-100">
                   Profile
                 </p>
-              </Link>
-              <Link href="/profile">
+              </Link> */}
+              {/* <Link href="/profile">
                 <p className="text-center font-semibold max-lg:text-md text-lg py-2 hover:bg-gray-100 duration-100">
                   Settings
                 </p>
-              </Link>
+              </Link> */}
               <Link href="/api/auth/logout">
                 <p className="text-center font-semibold max-lg:text-md text-lg py-2 hover:bg-gray-100 duration-100">
                   Logout

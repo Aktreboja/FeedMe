@@ -10,11 +10,11 @@ const montserrat = Montserrat({
 
 const Footer = () => {
   return (
-    <footer className="w-full py-4  text-center grid grid-cols-2 border-t-2">
-      <div className=" border flex flex-col ">
-        <h3 className={`text-3xl ${montserrat.className} b`}>FeedMe</h3>
-        <div className="ml-5 hidden md:flex">
-          <p> Powered by </p>
+    <footer className="w-full py-4  text-center grid grid-cols-1 border-t-2">
+      <div className="flex justify-center items-end">
+        <h3 className={`text-3xl ${montserrat.className} w-fit`}>FeedMe</h3>
+        <div className="flex">
+          <p>, Powered by </p>
           <Link href="https://www.yelp.com" target="_blank">
             <Image
               src="/yelp_logo_cmyk.png"
@@ -27,7 +27,9 @@ const Footer = () => {
           </Link>
         </div>
       </div>
-      <p className="font-semibold">&copy; 2024 FeedMe. All rights reserved.</p>
+      <p className="font-medium mt-1">
+        &copy; 2024 FeedMe. All rights reserved.
+      </p>
     </footer>
   );
 };

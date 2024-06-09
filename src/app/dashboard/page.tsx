@@ -228,7 +228,7 @@ export default withPageAuthRequired(
           </div>
 
           {/* Google Map */}
-          <div className="max-lg:w-full w-4/5 max-w-[1400px] h-[425px] mx-auto mt-5 ">
+          <div className="max-lg:w-full w-4/5 max-w-[1400px] h-[578px] mx-auto mt-5 ">
             <GoogleMaps
               cameraProps={cameraProps}
               markerCoords={markerCoordinates}
